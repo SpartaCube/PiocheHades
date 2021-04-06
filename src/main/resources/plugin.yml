@@ -1,0 +1,9 @@
+name: PiocheHades
+version: ${project.version}
+main: fr.benjis.PiocheHadesPlugin
+api-version: 1.16
+authors: [ Benjis ]
+description: Plugin pour la pioche hades
+
+commands:
+  piochehades:
