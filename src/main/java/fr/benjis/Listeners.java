@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -15,14 +16,14 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class Listeners implements Listener {
 
-
 	@EventHandler
 	private void onBlockBreak(BlockBreakEvent e) {
 		Player player = e.getPlayer();
 		PlayerInventory inv = player.getInventory();
 		ItemStack itemInHand = inv.getItemInMainHand();
 		Block block = e.getBlock();
-		Location loc = block.getLocation();
+		Location loc = block.getLocation().clone();
+		
 		if(isHadesItem(itemInHand)) {
 			switch (block.getType()) {
 			case GOLD_ORE:
@@ -32,22 +33,26 @@ public class Listeners implements Listener {
 				drop(e, Material.IRON_INGOT, 0.7, loc, true);
 				break;
 			case ANCIENT_DEBRIS:
-				drop(e, Material.GOLD_INGOT, 1, loc, false);
+				drop(e, Material.NETHERITE_SCRAP, 2, loc, false);
 				break;
 			case NETHER_GOLD_ORE:
-				drop(e, Material.NETHERITE_SCRAP, 1, loc, false);
+				drop(e, Material.GOLD_INGOT, 1, loc, false);
 				break;
 			default:
 				break;
 			}
-
 		}
+		
 	}
 
 	private void drop(BlockBreakEvent e, Material newDrop, double xp, Location loc, boolean fortuneMultiply) {
 		Player player = e.getPlayer();
 		ItemStack toDrop = new ItemStack(newDrop);
 		int amountToDrop = 1;
+		int expToDrop = 0;
+		
+		//Centre du bloc : 
+		loc.add(loc.getX() > 0 ? 0.5 : -0.5, 0.5, loc.getZ() > 0 ? 0.5 : -0.5);
 		
 		if(fortuneMultiply) {
 			int fortuneLevel = player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
@@ -55,9 +60,20 @@ public class Listeners implements Listener {
 			toDrop.setAmount(amountToDrop);
 		}
 		
+		for (int i = 0; i < amountToDrop ; i++) {
+			if(xp >= 1) {
+				expToDrop += xp;
+			}else {
+				if(Math.random() <= xp) {
+					expToDrop++;
+				}
+			}
+		}
+		
 		e.setDropItems(false);
-		e.setExpToDrop((int)(xp * amountToDrop));
+		e.setExpToDrop(expToDrop);
 		player.getWorld().dropItem(loc, toDrop);
+		player.getWorld().spawnParticle(Particle.FLAME, loc, 20 ,0.03, 0.03, 0.03, 0.02);
 	}
 
 	private boolean isHadesItem(ItemStack item) {
