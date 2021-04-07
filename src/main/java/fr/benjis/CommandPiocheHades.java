@@ -32,7 +32,7 @@ public class CommandPiocheHades implements CommandExecutor {
 
 		ItemMeta cus = hades.getItemMeta();
 		cus.setDisplayName("§e§lPioche d'Hades");
-		cus.setLore(Arrays.asList("§e§l-------------","§e§lCette pioche fait fondre","§e§lvos minerais que vous minez.","§e§l-------------","§c§l[ITEM LEGENDAIRE]"));
+		cus.setLore(Arrays.asList("§e§l-------------","§e§lCette pioche fait fondre","§e§lles minerais que vous minez.","§e§l-------------","§c§l[ITEM LEGENDAIRE]"));
 		hades.setItemMeta(cus);
 		return hades;
 	}
