@@ -6,10 +6,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -18,55 +16,48 @@ import org.bukkit.inventory.PlayerInventory;
 public class Listeners implements Listener {
 
 
-	@EventHandler(priority = EventPriority.HIGH)
-	private void onBlockBreak(BlockBreakEvent ev) {
-		if(!ev.isCancelled()) {
-			Player player = ev.getPlayer();
-			PlayerInventory inv = player.getInventory();
-			ItemStack itemInHand = inv.getItemInMainHand();
-			Location test = ev.getBlock().getLocation();
-			Block block1 = ev.getBlock();
-			Boolean enchantFortune = false;
-			int enchantFortuneLevel = 0;
-			if(itemInHand.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS)) {
-				enchantFortune = true;
-				enchantFortuneLevel = itemInHand.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+	@EventHandler
+	private void onBlockBreak(BlockBreakEvent e) {
+		Player player = e.getPlayer();
+		PlayerInventory inv = player.getInventory();
+		ItemStack itemInHand = inv.getItemInMainHand();
+		Block block = e.getBlock();
+		Location loc = block.getLocation();
+		if(isHadesItem(itemInHand)) {
+			switch (block.getType()) {
+			case GOLD_ORE:
+				drop(e, Material.GOLD_INGOT, 1, loc, true);
+				break;
+			case IRON_ORE:
+				drop(e, Material.IRON_INGOT, 0.7, loc, true);
+				break;
+			case ANCIENT_DEBRIS:
+				drop(e, Material.GOLD_INGOT, 1, loc, false);
+				break;
+			case NETHER_GOLD_ORE:
+				drop(e, Material.NETHERITE_SCRAP, 1, loc, false);
+				break;
+			default:
+				break;
 			}
-			int amount = getMultiplier(enchantFortuneLevel);
-			if(isHadesItem(itemInHand)) {
-				ItemStack item;
-				switch (ev.getBlock().getType()) {
-				case GOLD_ORE:
-					((ExperienceOrb)player.getWorld().spawn(test, ExperienceOrb.class)).setExperience(1 * amount);
-					ev.setCancelled(true);
-					block1.setType(Material.AIR);
-					item = new ItemStack(Material.GOLD_INGOT);
-					if(enchantFortune == true) {
-						item.setAmount(amount);
-					}
-					player.getWorld().dropItem(test, item);
-					break;
-				case IRON_ORE:
-					((ExperienceOrb)player.getWorld().spawn(test, ExperienceOrb.class)).setExperience((int) 0.7 * amount);
-					ev.setCancelled(true);
-					block1.setType(Material.AIR);
-					item = new ItemStack(Material.IRON_INGOT);
-					if(enchantFortune == true) {
-						item.setAmount(amount);
-					}
-					player.getWorld().dropItem(test, item);
-					break;
-				case ANCIENT_DEBRIS:
-					item = new ItemStack(Material.NETHERITE_SCRAP);
-					((ExperienceOrb)player.getWorld().spawn(test, ExperienceOrb.class)).setExperience(2);
-					block1.setType(Material.AIR);
-					player.getWorld().dropItem(test, item);
-					break;
-				default:
-					break;
-				}
-			}
+
 		}
+	}
+
+	private void drop(BlockBreakEvent e, Material newDrop, double xp, Location loc, boolean fortuneMultiply) {
+		Player player = e.getPlayer();
+		ItemStack toDrop = new ItemStack(newDrop);
+		int amountToDrop = 1;
+		
+		if(fortuneMultiply) {
+			int fortuneLevel = player.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+			amountToDrop = getMultiplier(fortuneLevel);
+			toDrop.setAmount(amountToDrop);
+		}
+		
+		e.setDropItems(false);
+		e.setExpToDrop((int)(xp * amountToDrop));
+		player.getWorld().dropItem(loc, toDrop);
 	}
 
 	private boolean isHadesItem(ItemStack item) {
